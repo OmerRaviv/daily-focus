@@ -151,16 +151,13 @@ the winner's `detail`.
 
 Query the calendars `sources.md` lists — typically the user's own, a shared family
 calendar, and any calendar belonging to someone whose plans decide the user's day —
-and honour any it tells you to exclude. Query today and the next 14 local calendar
-days on each: the dashboard's Upcoming section comes from future events in
-`items.json`, while the live Calendar.app helper only supplies today's view.
-Do not emit an event until the tool returns
+and honour any it tells you to exclude. Do not emit an event until the tool returns
 the event's real id, and never synthesise a `calendar:event:` id. If a calendar cannot
 be read, name it in step 5 rather than silently briefing from the others.
 
-`sources.md` may name a holiday calendar. Say when today is a public holiday. Put a
-future holiday that changes plans in Upcoming as an all-day event within the next
-14 days — school holidays especially, since they change who needs looking after.
+`sources.md` may name a holiday calendar. Say when today is a public holiday, and call
+out one falling within the next 14 days — school holidays especially, since they
+change who needs looking after.
 
 **Leave `dayStart` / `dayEnd` out.** An evening at home has no start and end worth
 measuring against, so the personal dashboard does not look for free windows or count
@@ -313,22 +310,15 @@ Then the general editorial bar:
   daycare invoice before Friday" beats "e-Boks: new letter". Keep them to one line.
 - **`detail` earns its place or is omitted.** Say what the user can't infer from the
   title: who is waiting, how long, what happens if it slips. Don't restate the title.
-- **Emit today's timed and all-day events as `kind: "event"`.** The dashboard computes clashes
+- **Emit today's timed events as `kind: "event"`.** The dashboard computes clashes
   itself from those events — do **not** emit free-window items yourself. You may
   mention the best free stretch in the `headline`.
-- **Emit useful events from tomorrow through 14 days ahead as `kind: "event"` too.**
-  They appear below Today in Upcoming, with their calendar date. Include appointments,
-  travel, school and childcare dates, visits, bookings and plans that need preparation
-  or change the user's day. Skip ordinary repeating events and anything cancelled or
-  declined. Keep each occurrence's real, stable calendar id and `start`; use a bare
-  `YYYY-MM-DD` for an all-day event. Do not repeat an Upcoming event as an `info` item.
 - **Mark an event `"blocking": false` when it takes none of the user's time.** A parcel
   delivery window, a partner's evening out, a reminder someone else is doing something:
   these belong on the agenda so the day reads correctly, but they do not stop the user.
   When in doubt, omit the field.
-- **Today's holidays and general context are `kind: "info"`**, not events. They land
-  in "Heads up" and can't be completed, only dismissed. Future holidays that change
-  plans belong in Upcoming as all-day events.
+- **Holidays and general context are `kind: "info"`**, not events. They land in a
+  "Heads up" section and can't be completed, only dismissed.
 - **Write a `headline`** of one or two sentences: the shape of the day. Inline Markdown
   is rendered (`**bold**`, `` `code` ``, `[text](url)`). Skip it if the day is
   unremarkable rather than padding it.
@@ -353,7 +343,7 @@ Item fields — `id`, `title`, `source`, `kind` are required, the rest optional:
 | `id` | Stable across runs. See below — this is the one that matters. |
 | `title` | One line. |
 | `source` | `eboks` · `email` · `messages` · `reminders` · `calendar` · `github` · `tasks` · `slack` · `jira` · `workday` · `atlassian` · `other`. Use the one the item came from; `sources.md` decides which sources you gather. |
-| `kind` | `task` (completable) · `event` (today's agenda or Upcoming, by `start`) · `info` (context only) |
+| `kind` | `task` (completable) · `event` (agenda) · `info` (context only) |
 | `detail` | A sentence or two. Inline Markdown. |
 | `url` | Deep link. **http(s) only** — anything else is dropped. Omit it rather than inventing one. |
 | `priority` | `1`–`3`, at most three items total. |
@@ -424,8 +414,8 @@ Check all of these, and fix anything that fails:
 10. **No text from the `<!-- agent-only -->` section appears anywhere in
     `items.json`.** Grep your own output for it before you rename.
 11. No title or `detail` quotes a private message beyond what is needed to recognise it.
-12. Every calendar and source in `sources.md` is accounted for as read through the
-    next 14 days, empty or unavailable.
+12. Every calendar and source in `sources.md` is accounted for as read, empty or
+    unavailable.
 13. No item or upstream id relies only on browser data.
 14. Any GitHub gap names the affected repository and is backed by a failed read-only
     `gh` probe.
