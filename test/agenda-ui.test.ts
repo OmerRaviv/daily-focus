@@ -12,8 +12,11 @@ import { test } from 'node:test';
 
 // Imported ahead of the client, for the document it installs.
 import { byClass, mountOne } from './dom.ts';
-import { eventRow, nextEventStat } from '../client/agenda.ts';
-import type { ResolvedItem } from '../src/types.ts';
+import { renderAgenda, eventRow, nextEventStat } from '../client/agenda.ts';
+import { formatShortDay } from '../client/format.ts';
+import { createUi } from '../client/state.ts';
+import type { DashboardState, ResolvedItem } from '../src/types.ts';
+import type { Handlers } from '../client/types.ts';
 
 /* ---------- the fixtures ---------- */
 
@@ -41,6 +44,25 @@ const render = (overrides: Partial<ResolvedItem> = {}) => mountOne(eventRow(even
 
 /** The row's sub-lines, in order — where "until", the clash and "marked free" land. */
 const subs = (node: HTMLElement) => byClass(node, 'agenda__sub').map((sub) => sub.textContent ?? '');
+
+test('Upcoming appears below Today with a compact date pill and event link', () => {
+  const state = {
+    now: NOW.toISOString(),
+    agenda: { events: [], conflictIds: [], freeWindows: [] },
+    upcoming: [event({ title: 'Planning offsite', start: '2026-09-12', end: undefined, url: 'https://example.com/offsite' })],
+  } as unknown as DashboardState;
+  const node = mountOne(renderAgenda(state, createUi(), {} as Handlers));
+  const today = node.querySelector('.agenda__title');
+  const upcoming = node.querySelector('.agenda__upcoming');
+  const pill = upcoming?.querySelector('.agenda__date');
+
+  assert.equal(today?.textContent, 'Today');
+  assert.equal(upcoming?.querySelector('.agenda__title')?.textContent, 'Upcoming');
+  assert.equal(pill?.textContent, formatShortDay('2026-09-12'));
+  assert.equal(upcoming?.querySelector('a')?.getAttribute('href'), 'https://example.com/offsite');
+  assert.equal(upcoming?.querySelector('.agenda__sub')?.textContent, 'All day');
+  assert.ok(today!.compareDocumentPosition(upcoming!) & Node.DOCUMENT_POSITION_FOLLOWING);
+});
 
 /* ---------- tests ---------- */
 

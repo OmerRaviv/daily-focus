@@ -75,6 +75,14 @@ test('the prompt lists the source and kind values from the schema', () => {
   }
 });
 
+test('both briefing prompts ask for future calendar events that feed Upcoming', () => {
+  for (const [name, markdown] of Object.entries(docs)) {
+    assert.ok(/next 14 local calendar\s+days/.test(markdown), `${name} does not query the Upcoming window`);
+    assert.ok(/tomorrow through 14 days ahead as `kind: "event"`/.test(markdown), `${name} does not emit future events`);
+    assert.ok(markdown.includes('Upcoming'), `${name} does not name the destination`);
+  }
+});
+
 /**
  * `sessions.jsonl` has no schema file, so the `SessionEnd` union in `src/types.ts` is
  * the source of truth for it. Worth checking even though it means scraping a type:

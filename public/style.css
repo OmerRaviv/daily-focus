@@ -1244,6 +1244,8 @@ body[data-session-active='true'] #today .item:not([data-running='true']):focus-w
   box-shadow: var(--shadow);
   position: sticky;
   top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }
 
 .agenda__title {
@@ -1292,6 +1294,41 @@ body[data-session-active='true'] #today .item:not([data-running='true']):focus-w
 }
 .agenda__row:first-child {
   border-top: 0;
+}
+
+.agenda__upcoming {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.agenda__row--upcoming {
+  align-items: start;
+}
+.agenda__date {
+  display: inline-flex;
+  justify-content: center;
+  width: fit-content;
+  padding: 2px 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.agenda__upcoming-empty {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .agenda {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 .agenda__time {

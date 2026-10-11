@@ -28,7 +28,7 @@ export type Source =
  * What an item *is*, which decides whether it can be completed.
  *
  * - `task`  something to do. Actionable, shows done/snooze/dismiss.
- * - `event` something happening at a time. Placed on the agenda.
+ * - `event` something happening at a time. Placed on today's agenda or Upcoming.
  * - `info`  context worth knowing (a holiday, a heads-up). Dismissable, not completable.
  */
 export type ItemKind = 'task' | 'event' | 'info';
@@ -56,7 +56,7 @@ export interface Item {
   priority?: number;
   /** ISO 8601. Drives the "due" / "overdue" pill. */
   due?: string;
-  /** ISO 8601. `kind: "event"` only — places the item on the agenda. */
+  /** ISO 8601. `kind: "event"` only — places the item on today's agenda or Upcoming. */
   start?: string;
   end?: string;
   /**
@@ -874,6 +874,8 @@ export interface DashboardState {
   };
   items: ResolvedItem[];
   agenda: Agenda;
+  /** Events beyond today from the morning brief, through the next 14 days. */
+  upcoming: ResolvedItem[];
   /** The live pull request board. Present even when off, so the client can say why. */
   board: BoardState;
   /** The Jira ticket board. Present even when off, for the same reason. */

@@ -224,6 +224,8 @@ for (const profile of PROFILES) {
       assert.equal(state.agenda.conflictIds.length, 2, 'one clash');
       assert.equal(state.agenda.tracksFreeTime, profile === 'work');
       if (profile === 'work') assert.equal(state.agenda.freeWindows.length, 3);
+      assert.equal(state.upcoming.length, 3, 'the sample brief fills Upcoming');
+      assert.ok(state.upcoming.every((event) => event.kind === 'event'));
 
       // The pull request board, from the sample world: a row in nearly every court, and one parked.
       assert.equal(state.board.enabled, true);

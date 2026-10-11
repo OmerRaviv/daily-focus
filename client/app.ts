@@ -63,7 +63,7 @@ export function App({ ui, handlers }: { ui: UiState; handlers: Handlers }): JSX.
       ),
       el(
         'aside',
-        { class: 'layout__side', 'aria-label': "Today's agenda" },
+        { class: 'layout__side', 'aria-label': 'Calendar' },
         el('div', { id: 'agenda' }, current && view === 'today' ? renderAgenda(current, ui, handlers) : null),
       ),
       current

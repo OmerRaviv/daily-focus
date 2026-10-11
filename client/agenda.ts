@@ -5,7 +5,7 @@ import type { JSX } from 'preact';
 import type { Agenda, AgendaSource, DashboardState, FreeWindow, ResolvedItem } from '../src/types.ts';
 import { el } from './el.ts';
 import { failureNotice } from './failure.ts';
-import { formatDuration, formatTime } from './format.ts';
+import { dayKey, formatDuration, formatShortDay, formatTime } from './format.ts';
 import type { Handlers, UiState } from './types.ts';
 
 export function renderAgenda(state: DashboardState, ui: UiState, handlers: Handlers): JSX.Element {
@@ -35,6 +35,36 @@ export function renderAgenda(state: DashboardState, ui: UiState, handlers: Handl
     el('h2', { class: 'agenda__title' }, 'Today'),
     agendaNotes(state.agendaSource, now, ui, handlers),
     rows.length > 0 ? el('ul', { class: 'agenda__list' }, rows) : el('p', { class: 'empty' }, 'No events today.'),
+    upcomingSection(state.upcoming ?? []),
+  );
+}
+
+/** Future calendar events come from the morning brief, even when Today is live. */
+function upcomingSection(events: readonly ResolvedItem[]): JSX.Element {
+  return el(
+    'section',
+    { class: 'agenda__upcoming', 'aria-labelledby': 'agenda-upcoming-title' },
+    el('h2', { class: 'agenda__title', id: 'agenda-upcoming-title' }, 'Upcoming'),
+    events.length > 0
+      ? el('ul', { class: 'agenda__list' }, events.map(upcomingRow))
+      : el('p', { class: 'agenda__upcoming-empty' }, 'No upcoming events in this brief.'),
+  );
+}
+
+function upcomingRow(event: ResolvedItem): JSX.Element {
+  const start = event.start ?? '';
+  const allDay = /^\d{4}-\d{2}-\d{2}$/.test(start);
+  const date = allDay ? start : dayKey(new Date(start));
+  const time = allDay ? 'All day' : event.end ? `${formatTime(start)}–${formatTime(event.end)}` : formatTime(start);
+  const name = event.url
+    ? el('a', { href: event.url, target: '_blank', rel: 'noopener noreferrer' }, event.title)
+    : event.title;
+
+  return el(
+    'li',
+    { class: 'agenda__row agenda__row--upcoming' },
+    el('span', { class: 'agenda__date' }, formatShortDay(date)),
+    el('span', { class: 'agenda__name' }, name, el('span', { class: 'agenda__sub' }, time)),
   );
 }
 

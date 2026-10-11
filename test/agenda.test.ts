@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { buildAgenda } from '../src/agenda.ts';
+import { buildAgenda, upcomingEvents } from '../src/agenda.ts';
 import type { ResolvedItem } from '../src/types.ts';
 
 const NOW = new Date(2026, 8, 10, 10, 0, 0); // 10 Sep 2026, local
@@ -40,6 +40,25 @@ test('keeps only today\'s events, in clock order', () => {
   assert.deepEqual(
     agenda.events.map((e) => e.id),
     ['early', 'late'],
+  );
+});
+
+test('upcoming keeps future brief events through day 14, sorted by date', () => {
+  const on = (days: number, hour = 9) => new Date(2026, 8, 10 + days, hour).toISOString();
+  const dismissed = { ...event('dismissed', on(4)), status: 'dismissed' as const };
+  const task = { ...event('task', on(2)), kind: 'task' as const };
+
+  assert.deepEqual(
+    upcomingEvents([
+      event('too-far', on(15)),
+      event('last-day', '2026-09-24'),
+      event('today', on(0)),
+      event('soon', on(1)),
+      dismissed,
+      task,
+      event('past', on(-1)),
+    ], NOW).map((item) => item.id),
+    ['soon', 'last-day'],
   );
 });
 

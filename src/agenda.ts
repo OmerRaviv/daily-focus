@@ -1,9 +1,20 @@
 import type { Agenda, FreeWindow, ResolvedItem } from './types.ts';
-import { isDateOnly, isSameLocalDay, parseISO } from './time.ts';
+import { calendarDaysBetween, isDateOnly, isSameLocalDay, parseISO } from './time.ts';
 
 /** Assumed length of an event the agent gave a start but no end. */
 const DEFAULT_EVENT_MINUTES = 30;
 const MS_PER_MINUTE = 60_000;
+export const UPCOMING_DAYS = 14;
+
+/** Future events from the brief, separate from the live read of today's agenda. */
+export function upcomingEvents(items: readonly ResolvedItem[], now: Date): ResolvedItem[] {
+  return items
+    .filter((item) => item.kind === 'event' && item.status !== 'dismissed')
+    .map((item) => ({ item, start: parseISO(item.start) }))
+    .filter(({ start }) => start !== null && calendarDaysBetween(now, start) >= 1 && calendarDaysBetween(now, start) <= UPCOMING_DAYS)
+    .sort((a, b) => a.start!.getTime() - b.start!.getTime() || a.item.title.localeCompare(b.item.title))
+    .map(({ item }) => item);
+}
 
 interface Interval {
   start: number;

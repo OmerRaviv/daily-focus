@@ -162,7 +162,12 @@ a GitHub review request beats a task restating it, and a `gtasks:task:` id beats
 #### Google Calendar
 
 Query the calendars `sources.md` lists, and honour any it tells you to exclude. A
-connector that cannot enumerate calendars may still query one by id. When a calendar
+calendar query must cover today and the next 14 local calendar days, not just today's
+meetings: the dashboard's Upcoming section comes from the future events you put in
+`items.json`. Query each named calendar for that range even when the live agenda is
+enabled; the live Calendar.app helper only supplies today's view.
+
+A connector that cannot enumerate calendars may still query one by id. When a calendar
 entry in `sources.md` includes an id, query that id directly and do not open the browser
 for that calendar. If the id is absent, one browser look may only be used to discover
 it; then return to the connector and query the id. Do not emit an event until the
@@ -174,8 +179,9 @@ worse than one that says it couldn't read it.
 
 `sources.md` also names the holiday calendars worth watching: typically one for the
 region whose public holidays decide which colleagues are reachable today, and one for
-the user's own. Say when today is a holiday for either, and call out a local one
-falling within the next 14 days.
+the user's own. Say when today is a holiday for either. Put a future holiday that
+changes availability or plans in Upcoming as an all-day event, within the same
+14-day window.
 
 **Work out when today actually ends and set `dayStart` / `dayEnd`** (local `"HH:MM"`).
 The working day is not a constant — some days end early, and the calendar is where
@@ -479,18 +485,26 @@ Then the general editorial bar:
 - **`detail` earns its place or is omitted.** Say what the user can't infer from the title:
   who is waiting, how long, what specifically is failing, what happens if the user ignores
   it. Don't restate the title.
-- **Emit today's timed events as `kind: "event"`.** The dashboard computes clashes and
+- **Emit today's timed and all-day events as `kind: "event"`.** The dashboard computes clashes and
   free/focus windows itself from those events, so it stays accurate as the day passes
   — do **not** emit free-window or "focus block" items yourself. You may mention the
   best focus block in the `headline`.
+- **Emit useful events from tomorrow through 14 days ahead as `kind: "event"` too.**
+  They appear below Today in Upcoming, with their calendar date. Include meetings
+  that need preparation, launches and deadlines on the calendar, travel, leave,
+  and other changes to the user's plans. Skip ordinary repeating standups and
+  events the user declined or that were cancelled. Keep each occurrence's real,
+  stable calendar id and `start`; use a bare `YYYY-MM-DD` for an all-day event.
+  Do not put a future event in both Upcoming and a separate `info` item.
 - **Mark an event `"blocking": false` when it takes none of the user's time.** A parcel
   delivery window, a restaurant booking, a reminder someone else is doing something:
   these belong on the agenda so the day reads correctly, but they do not stop the user
   working, and counting them as busy invents a shorter day than the one they have.
   A meeting they are expected to attend is always blocking — when in doubt, omit the
   field, since reserving time you didn't need is the cheaper mistake.
-- **Holidays and general context are `kind: "info"`**, not events. They land in a
-  "Heads up" section and can't be completed, only dismissed.
+- **Today's holidays and general context are `kind: "info"`**, not events. They land
+  in "Heads up" and can't be completed, only dismissed. Future holidays that change
+  plans belong in Upcoming as all-day events.
 - **Write a `headline`** of one or two sentences: the shape of the day. What is
   genuinely time-boxed, and where the real focus window is. Inline Markdown is
   rendered (`**bold**`, `` `code` ``, `[text](url)`). Skip it if the day is
@@ -518,7 +532,7 @@ Item fields — `id`, `title`, `source`, `kind` are required, the rest optional:
 | `id` | Stable across runs. See below — this is the one that matters. |
 | `title` | One line. |
 | `source` | `github` · `email` · `calendar` · `jira` · `slack` · `workday` · `tasks` · `atlassian` · `reminders` · `messages` · `eboks` · `other`. Use the one the item came from; `sources.md` decides which sources you gather. |
-| `kind` | `task` (completable) · `event` (agenda) · `info` (context only) |
+| `kind` | `task` (completable) · `event` (today's agenda or Upcoming, by `start`) · `info` (context only) |
 | `detail` | A sentence or two. Inline Markdown. |
 | `url` | Deep link. **http(s) only** — anything else is dropped. |
 | `priority` | `1`–`3`, at most three items total. |
@@ -598,8 +612,8 @@ Check all of these, and fix anything that fails:
    With no objective, no item has `advancesObjective`.
 10. **No text from the `<!-- agent-only -->` section appears anywhere in
     `items.json`.** Grep your own output for it before you rename.
-11. Every calendar in `sources.md` is accounted for as queried, empty or unavailable,
-    and every known calendar id was tried directly.
+11. Every calendar in `sources.md` is accounted for as queried through the next
+    14 days, empty or unavailable, and every known calendar id was tried directly.
 12. Every `calendar:event:` id came from the Calendar connector. None was synthesised
     from a title, time, URL or browser page.
 13. Every `gh` command ran outside the sandbox. Any GitHub gap names the affected

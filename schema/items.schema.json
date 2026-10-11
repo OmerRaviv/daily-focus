@@ -57,7 +57,7 @@
         },
         "kind": {
           "enum": ["task", "event", "info"],
-          "description": "task = completable; event = goes on the agenda; info = context only."
+          "description": "task = completable; event = today's agenda or Upcoming, depending on start; info = context only."
         },
         "detail": {
           "type": "string",
@@ -76,7 +76,7 @@
         "due": { "type": "string", "description": "ISO date or timestamp." },
         "start": {
           "type": "string",
-          "description": "Events only. A bare YYYY-MM-DD means all-day."
+          "description": "Events only. Today appears on the agenda; future events through 14 days appear in Upcoming. A bare YYYY-MM-DD means all-day."
         },
         "end": { "type": "string", "description": "Events only." },
         "blocking": {

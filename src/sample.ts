@@ -19,6 +19,10 @@ function timeOn(now: Date, hour: number, minute = 0): string {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute).toISOString();
 }
 
+function timeDaysFromNow(now: Date, days: number, hour: number, minute = 0): string {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, hour, minute).toISOString();
+}
+
 /** A local date key some days from today. */
 export function dateFromNow(now: Date, days: number): string {
   return localDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + days));
@@ -229,6 +233,22 @@ function workBrief(now: Date): Brief {
       end: at(16, 0),
     },
     {
+      id: 'calendar:event:checkout-review',
+      source: 'calendar',
+      kind: 'event',
+      title: 'Staging checkout readiness review',
+      start: timeDaysFromNow(now, 2, 10),
+      end: timeDaysFromNow(now, 2, 10, 45),
+    },
+    {
+      id: 'calendar:event:launch-checkpoint',
+      source: 'calendar',
+      kind: 'event',
+      title: 'Customer launch checkpoint',
+      start: timeDaysFromNow(now, 6, 14),
+      end: timeDaysFromNow(now, 6, 15),
+    },
+    {
       id: 'calendar:holiday:us-labor-day',
       source: 'calendar',
       kind: 'info',
@@ -237,11 +257,11 @@ function workBrief(now: Date): Brief {
       firstSeen: daysFromNow(0),
     },
     {
-      id: 'calendar:holiday:local-national-day',
+      id: 'calendar:event:local-national-day',
       source: 'calendar',
-      kind: 'info',
-      title: `Local public holiday in 9 days (${daysFromNow(9)}) — office closed`,
-      firstSeen: daysFromNow(0),
+      kind: 'event',
+      title: 'Local public holiday — office closed',
+      start: daysFromNow(9),
     },
   ];
 
@@ -416,11 +436,27 @@ function personalBrief(now: Date): Brief {
       end: at(21, 30),
     },
     {
-      id: 'calendar:holiday:autumn-break',
+      id: 'calendar:event:dentist',
       source: 'calendar',
-      kind: 'info',
-      title: `School autumn holiday starts in 9 days (${daysFromNow(9)}) — Noa is off all week`,
-      firstSeen: daysFromNow(0),
+      kind: 'event',
+      title: 'Dentist appointment',
+      start: timeDaysFromNow(now, 3, 9, 30),
+      end: timeDaysFromNow(now, 3, 10, 15),
+    },
+    {
+      id: 'calendar:event:school-concert',
+      source: 'calendar',
+      kind: 'event',
+      title: 'Noa’s school concert',
+      start: timeDaysFromNow(now, 7, 18),
+      end: timeDaysFromNow(now, 7, 19),
+    },
+    {
+      id: 'calendar:event:autumn-break',
+      source: 'calendar',
+      kind: 'event',
+      title: 'School autumn break begins — Noa off all week',
+      start: daysFromNow(9),
     },
   ];
 

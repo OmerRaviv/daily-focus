@@ -13,7 +13,7 @@ import type {
 } from './types.ts';
 import type { Config } from './config.ts';
 import { archiveBrief, computeObjectiveProgress, readArchiveIndex } from './archive.ts';
-import { buildAgenda } from './agenda.ts';
+import { buildAgenda, upcomingEvents } from './agenda.ts';
 import { parseFocus, toPublicFocus, type Focus } from './focus.ts';
 import { parseActionLine, parseBrief } from './validate.ts';
 import {
@@ -288,6 +288,7 @@ export class Store {
       },
       items,
       agenda,
+      upcoming: upcomingEvents(items, now),
       agendaSource,
       stats: {
         open: visible.filter((item) => item.kind !== 'event').length,

@@ -58,8 +58,10 @@ the CLI you choose.
 ## Your day at a glance
 
 The **Today** tab puts your objective and top priorities beside your agenda.
-It shows meeting conflicts, free time for focused work, and how long it has been
-since you completed something that advanced your objective.
+Below today's calendar, **Upcoming** shows events from the morning brief over the
+next 14 days with their dates. The tab also shows meeting conflicts, free time for
+focused work, and how long it has been since you completed something that advanced
+your objective.
 
 - Mark tasks **Done** when you've handled them.
 - **Snooze** an item until a date, or **Dismiss** it if it doesn't need attention.

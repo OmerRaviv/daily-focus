@@ -61,6 +61,29 @@ test('round-trips a brief through the store', async () => {
   assert.equal(state.stats.open, 1);
 });
 
+test('a live read supplies Today while Upcoming still comes from the brief', async () => {
+  const store = await makeStore();
+  const now = new Date(2026, 8, 10, 10);
+  const today = new Date(2026, 8, 10, 11).toISOString();
+  const tomorrow = new Date(2026, 8, 11, 12).toISOString();
+  await writeFile(store.config.itemsFile, JSON.stringify(brief([
+    { id: 'brief-today', source: 'calendar', kind: 'event', title: 'Old agenda item', start: today },
+    { id: 'brief-future', source: 'calendar', kind: 'event', title: 'Tomorrow', start: tomorrow },
+  ], now.toISOString())));
+
+  const state = await store.getState(now, undefined, {
+    live: true,
+    fetchedAt: now.toISOString(),
+    problem: null,
+    failure: null,
+    warnings: [],
+    events: [{ id: 'live-today', source: 'calendar', kind: 'event', title: 'Fresh agenda item', start: today }],
+  });
+
+  assert.deepEqual(state.agenda.events.map((item) => item.id), ['live-today']);
+  assert.deepEqual(state.upcoming.map((item) => item.id), ['brief-future']);
+});
+
 test('an appended action changes what the dashboard reports', async () => {
   const store = await makeStore();
   await writeFile(
