@@ -154,10 +154,10 @@ export function computeObjectiveProgress(
   now: Date,
   counts: DayTest = isWorkingDay,
 ): ObjectiveProgress {
-  /** Last action per id wins, exactly as the dashboard resolves status. */
+  /** Last status-changing action per id wins, exactly as the dashboard resolves status. */
   const lastAction = new Map<string, Action>();
   for (const action of actions) {
-    if (action.action === 'note') continue;
+    if (action.action === 'note' || action.action === 'set-due') continue;
     lastAction.set(canonicalId(action.id), action);
   }
 

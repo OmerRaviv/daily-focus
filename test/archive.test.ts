@@ -182,6 +182,15 @@ test('a note after a completion does not cancel it', () => {
   assert.equal(progress.workingDaysSince, 0);
 });
 
+test('a due-date edit after a completion does not erase objective progress', () => {
+  const progress = computeObjectiveProgress(
+    index({ a: true }),
+    [done('a', at(2026, 9, 10)), { id: 'a', action: 'set-due', at: at(2026, 9, 10), due: '2026-09-15' }],
+    NOW,
+  );
+  assert.equal(progress.workingDaysSince, 0);
+});
+
 test('dismissing an objective item is not progress', () => {
   const progress = computeObjectiveProgress(
     index({ a: true }),

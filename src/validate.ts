@@ -1,4 +1,5 @@
 import type { Brief, Item, ItemKind, Source } from './types.ts';
+import { isValidDateOnly } from './time.ts';
 
 /**
  * items.json is written by an LLM, so it will occasionally be wrong in small ways.
@@ -251,7 +252,8 @@ export function parseActionLine(line: string): import('./types.ts').Action | nul
   const id = optionalString(raw.id);
   const action = optionalString(raw.action);
   if (!id || !action) return null;
-  if (!['done', 'snooze', 'dismiss', 'reopen', 'note'].includes(action)) return null;
+  if (!['done', 'snooze', 'dismiss', 'reopen', 'note', 'set-due'].includes(action)) return null;
+  if (action === 'set-due' && raw.due !== null && !isValidDateOnly(raw.due)) return null;
 
   const result: import('./types.ts').Action = {
     id,
@@ -262,5 +264,6 @@ export function parseActionLine(line: string): import('./types.ts').Action | nul
   if (until) result.until = until;
   const text = optionalString(raw.text);
   if (text) result.text = text;
+  if (action === 'set-due') result.due = raw.due as string | null;
   return result;
 }

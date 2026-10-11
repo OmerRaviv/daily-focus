@@ -136,7 +136,7 @@ export interface Brief {
 }
 
 /** What the dashboard can record against an item. */
-export type ActionType = 'done' | 'snooze' | 'dismiss' | 'reopen' | 'note';
+export type ActionType = 'done' | 'snooze' | 'dismiss' | 'reopen' | 'note' | 'set-due';
 
 /** One appended line in actions.jsonl. */
 export interface Action {
@@ -149,6 +149,8 @@ export interface Action {
   until?: string;
   /** `note` only: free text aimed at the agent, e.g. "already replied on Slack". */
   text?: string;
+  /** `set-due` only: a local date override; null restores the brief's due date. */
+  due?: string | null;
 }
 
 /** The resolved state of an item after folding its action log. */
@@ -157,6 +159,8 @@ export type ItemStatus = 'open' | 'done' | 'snoozed' | 'dismissed';
 /** An item plus everything the action log says about it. */
 export interface ResolvedItem extends Item {
   status: ItemStatus;
+  /** The displayed due date was set by the user, independently of the agent's brief. */
+  dueOverridden?: boolean;
   /** Set when status is `snoozed`. YYYY-MM-DD. */
   snoozedUntil?: string;
   /** When the current status was set. */

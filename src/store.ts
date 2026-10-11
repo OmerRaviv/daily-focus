@@ -315,6 +315,8 @@ export class Store {
 /** What the action log says about one id, after folding. */
 export interface FoldedActions {
   status: ItemStatus;
+  /** User-selected due date, independent of status and the agent's source date. */
+  dueOverride?: string;
   snoozedUntil?: string;
   statusAt?: string;
   notes: { text: string; at: string }[];
@@ -323,10 +325,10 @@ export interface FoldedActions {
 /**
  * Fold the whole log, keyed on canonical id.
  *
- * The log is append-only and in chronological order, so the last action for an id
- * decides its status. A snooze whose date has arrived quietly reverts to open —
- * that is the whole point of snoozing. Shared by the brief and the pull request
- * board so there is exactly one reading of the log.
+ * The log is append-only and in chronological order. Status-changing actions decide
+ * status; notes and due-date edits leave it alone. A snooze whose date has arrived
+ * quietly reverts to open — that is the whole point of snoozing. Shared by the
+ * brief and the pull request board so there is exactly one reading of the log.
  */
 export function foldActionLog(actions: readonly Action[], now: Date): Map<string, FoldedActions> {
   const folded = new Map<string, FoldedActions>();
@@ -344,6 +346,10 @@ export function foldActionLog(actions: readonly Action[], now: Date): Map<string
     switch (action.action) {
       case 'note':
         if (action.text) entry.notes.push({ text: action.text, at: action.at });
+        break;
+      case 'set-due':
+        if (action.due === null) delete entry.dueOverride;
+        else if (action.due) entry.dueOverride = action.due;
         break;
       case 'done':
         entry.status = 'done';
@@ -401,6 +407,10 @@ export function resolveItems(
     };
     if (log?.snoozedUntil) resolved.snoozedUntil = log.snoozedUntil;
     if (log?.statusAt) resolved.statusAt = log.statusAt;
+    if (log?.dueOverride) {
+      resolved.due = log.dueOverride;
+      resolved.dueOverridden = true;
+    }
     return resolved;
   });
 }

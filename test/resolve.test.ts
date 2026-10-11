@@ -77,6 +77,31 @@ test('notes accumulate and do not change status', () => {
   );
 });
 
+test('a due-date edit survives later status changes and a new brief', () => {
+  const actions = [
+    action('a', 'set-due', { due: '2026-09-15' }),
+    action('a', 'done'),
+  ];
+  const [resolved] = resolveItems([item('a', { due: '2026-09-12' })], actions, NOW);
+  assert.equal(resolved?.due, '2026-09-15');
+  assert.equal(resolved?.dueOverridden, true);
+  assert.equal(resolved?.status, 'done');
+
+  const [refreshed] = resolveItems([item('a', { due: '2026-09-13' })], actions, NOW);
+  assert.equal(refreshed?.due, '2026-09-15');
+});
+
+test('resetting a due-date edit restores the latest brief date without changing status', () => {
+  const [resolved] = resolveItems(
+    [item('a', { due: '2026-09-13' })],
+    [action('a', 'snooze', { until: '2026-09-20' }), action('a', 'set-due', { due: '2026-09-15' }), action('a', 'set-due', { due: null })],
+    NOW,
+  );
+  assert.equal(resolved?.due, '2026-09-13');
+  assert.equal(resolved?.dueOverridden, undefined);
+  assert.equal(resolved?.status, 'snoozed');
+});
+
 test('actions only affect their own item', () => {
   const resolved = resolveItems([item('a'), item('b')], [action('a', 'done')], NOW);
   assert.equal(resolved[0]?.status, 'done');

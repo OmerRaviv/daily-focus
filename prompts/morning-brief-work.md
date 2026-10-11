@@ -75,7 +75,8 @@ one — the dashboard handles that reminder itself. Everything below that mentio
 objective applies only when one is set.
 
 **Fold `actions.jsonl`.** One JSON object per line, appended chronologically. Group
-by `id` and take the **last** entry for each id:
+by `id` and apply entries in order. The last **status-changing** action decides
+status; `note` and `set-due` leave it unchanged:
 
 | Last action | Meaning | What you do today |
 |---|---|---|
@@ -84,6 +85,7 @@ by `id` and take the **last** entry for each id:
 | `snooze` | Not today | Leave it out until `until` (a `YYYY-MM-DD`) has arrived. If `until` is absent, use your judgement about when it's worth resurfacing. |
 | `reopen` | They undid a previous action | Treat as though nothing had been recorded — it is live again. |
 | `note` | Free text for you; **does not** change status | Read it. It usually explains *why*, and often tells you something the sources can't. |
+| `set-due` | The user changed the dashboard's displayed due date; **does not** change status | Use the latest chosen date when planning and wording the item; `due: null` clears that choice. Do not claim the upstream deadline moved. Keep `due` sourced from upstream; the dashboard applies the override after your brief is written. If a hard external deadline conflicts, say so. |
 
 **This is the most important instruction in this prompt.** A `done` in the log
 outranks everything you can observe upstream. If the log says the user handled a Gmail

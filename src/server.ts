@@ -28,6 +28,7 @@ import { hydratePath } from './shellpath.ts';
 import { command, PACKAGED, packageVersion, ranDirectly } from './install.ts';
 import { FOCUS_TEMPLATE, sourcesTemplate } from './templates.ts';
 import type { Action, ActionType, DashboardState } from './types.ts';
+import { isValidDateOnly } from './time.ts';
 
 const PUBLIC_DIR = resolve(fileURLToPath(new URL('../public', import.meta.url)));
 const VERSION = packageVersion();
@@ -55,6 +56,7 @@ const VALID_ACTIONS: ReadonlySet<string> = new Set<ActionType>([
   'dismiss',
   'reopen',
   'note',
+  'set-due',
 ]);
 
 /** Body cap — actions are a few hundred bytes; anything larger is a mistake or an attack. */
@@ -773,7 +775,7 @@ export async function startServer(env?: NodeJS.ProcessEnv, options: ServerOption
         return;
       }
 
-      const { id, action, until, text } = body as Record<string, unknown>;
+      const { id, action, until, text, due } = body as Record<string, unknown>;
       if (typeof id !== 'string' || id === '') {
         sendJSON(res, 400, { error: '"id" is required' });
         return;
@@ -790,10 +792,15 @@ export async function startServer(env?: NodeJS.ProcessEnv, options: ServerOption
         sendJSON(res, 400, { error: '"text" is required for a note' });
         return;
       }
+      if (action === 'set-due' && due !== null && !isValidDateOnly(due)) {
+        sendJSON(res, 400, { error: '"due" must be a real YYYY-MM-DD date or null to restore the brief date' });
+        return;
+      }
 
       const record: Action = { id, action: action as ActionType, at: new Date().toISOString() };
       if (action === 'snooze' && typeof until === 'string') record.until = until;
       if (action === 'note' && typeof text === 'string') record.text = text.trim();
+      if (action === 'set-due') record.due = due as string | null;
 
       await store.appendAction(record);
       // The full state, board included: the client swaps its whole state for this

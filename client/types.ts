@@ -164,6 +164,7 @@ export type UiValues = { [K in keyof UiState]: UiState[K] extends Signal<infer T
 export interface ActionExtra {
   until?: string;
   text?: string;
+  due?: string | null;
 }
 
 /** What the renderers can ask the page to do. Wired up in `actions.ts`. */

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { after, test } from 'node:test';
@@ -336,6 +336,18 @@ test('counts overdue items against local today', async () => {
 
   const state = await store.getState();
   assert.equal(state.stats.overdue, 1);
+});
+
+test('a user due-date override changes the overdue count without editing the agent brief', async () => {
+  const store = await makeStore();
+  const agentBrief = brief([{ id: 'invoice', source: 'email', kind: 'task', title: 'Pay invoice', due: '2020-01-01' }]);
+  await writeFile(store.config.itemsFile, JSON.stringify(agentBrief));
+  await store.appendAction({ id: 'invoice', action: 'set-due', at: new Date().toISOString(), due: '2099-01-01' });
+
+  const state = await store.getState();
+  assert.equal(state.items[0]?.due, '2099-01-01');
+  assert.equal(state.stats.overdue, 0);
+  assert.equal(JSON.parse(await readFile(store.config.itemsFile, 'utf8')).items[0].due, '2020-01-01');
 });
 
 

@@ -32,7 +32,7 @@ export async function fetchState(): Promise<DashboardState> {
 }
 
 /** Record an action against an item. */
-export function postAction(action: { id: string; action: string; until?: string; text?: string }): Promise<DashboardState> {
+export function postAction(action: { id: string; action: string; until?: string; text?: string; due?: string | null }): Promise<DashboardState> {
   return post('/api/actions', action);
 }
 

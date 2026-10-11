@@ -84,11 +84,30 @@ test('POST /api/actions rejects a bad payload', async () => {
     { id: 'gh:1', action: 'snooze', until: 'next tuesday' },
     { id: 'gh:1', action: 'note' },
     { id: 'gh:1', action: 'note', text: '   ' },
+    { id: 'gh:1', action: 'set-due' },
+    { id: 'gh:1', action: 'set-due', due: '2026-02-30' },
+    { id: 'gh:1', action: 'set-due', due: 'next week' },
   ]) {
     const res = await post(body);
     assert.equal(res.status, 400, `expected 400 for ${JSON.stringify(body)}`);
     assert.ok((await json(res)).error);
   }
+});
+
+test('a due-date edit is saved without changing item status', async () => {
+  const before = await json(await fetch(`${server.url}/api/state`));
+  const res = await post({ id: 'gh:1', action: 'set-due', due: '2026-10-12' });
+  assert.equal(res.status, 200);
+  const state = await json(res);
+  assert.equal(state.items[0].due, '2026-10-12');
+  assert.equal(state.items[0].dueOverridden, true);
+  assert.equal(state.items[0].status, before.items[0].status);
+
+  const reset = await post({ id: 'gh:1', action: 'set-due', due: null });
+  assert.equal(reset.status, 200);
+  const restored = await json(reset);
+  assert.equal(restored.items[0].due, undefined);
+  assert.equal(restored.items[0].status, before.items[0].status);
 });
 
 test('a snooze without a date is allowed', async () => {

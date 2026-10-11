@@ -5,7 +5,7 @@ import { useLayoutEffect, useRef } from 'preact/hooks';
 
 import type { DashboardState, ResolvedItem } from '../src/types.ts';
 import { el } from './el.ts';
-import { addDays, addMonths, dayKey, daysFromToday, formatShortDay, relativeDay } from './format.ts';
+import { addDays, addMonths, dayKey, daysFromToday, formatShortDay, parseDate, relativeDay } from './format.ts';
 import { renderMarkdown } from './markdown.ts';
 import { clock, remainingSeconds } from './timer.ts';
 import type { Handlers, UiState } from './types.ts';
@@ -184,7 +184,7 @@ export function ItemRow({ item, state, ui, handlers }: RowProps<ResolvedItem>): 
       'div',
       { class: 'item__body' },
       el('p', { class: 'item__title' }, title),
-      renderMeta(item, state, ui, now),
+      renderMeta(item, state, ui, now, handlers),
       item.detail ? el('p', { class: 'item__detail' }, renderMarkdown(item.detail)) : null,
     ),
     renderActions(item, state, ui, handlers),
@@ -192,7 +192,7 @@ export function ItemRow({ item, state, ui, handlers }: RowProps<ResolvedItem>): 
   );
 }
 
-function renderMeta(item: ResolvedItem, state: DashboardState, ui: UiState, now: Date): JSX.Element {
+function renderMeta(item: ResolvedItem, state: DashboardState, ui: UiState, now: Date, handlers: Handlers): JSX.Element {
   const pills: JSX.Element[] = [];
   const said = new Set<string>();
   const pill = (cls: string, text: string): void => {
@@ -227,9 +227,13 @@ function renderMeta(item: ResolvedItem, state: DashboardState, ui: UiState, now:
   if (item.due) {
     const diff = daysFromToday(item.due, now);
     if (diff !== null && diff < 0) {
-      pill('pill pill--overdue', `overdue ${relativeDay(item.due, now)}`);
-    } else if (diff !== null && diff <= 7) {
-      pill('pill pill--due', `due ${relativeDay(item.due, now)}`);
+      const text = `overdue ${relativeDay(item.due, now)}`;
+      pills.push(renderDuePill(item, 'pill--overdue', text, handlers));
+      said.add(text.toLowerCase());
+    } else if (diff !== null && (diff <= 7 || item.dueOverridden)) {
+      const text = `due ${relativeDay(item.due, now)}`;
+      pills.push(renderDuePill(item, 'pill--due', text, handlers));
+      said.add(text.toLowerCase());
     }
   }
 
@@ -260,6 +264,55 @@ function renderMeta(item: ResolvedItem, state: DashboardState, ui: UiState, now:
     el('span', { class: 'item__source' }, SOURCE_LABEL[item.source] ?? 'Other'),
     item.people?.length ? el('span', null, `· ${item.people.join(', ')}`) : null,
     pills,
+  );
+}
+
+/** Keep the native date input mounted so the pill's click can open its picker immediately. */
+function renderDuePill(item: ResolvedItem, tone: string, text: string, handlers: Handlers): JSX.Element {
+  const original = item.due!;
+  const date = parseDate(original);
+  const selected = /^\d{4}-\d{2}-\d{2}$/.test(original)
+    ? original
+    : date
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : '';
+
+  return el(
+    'span',
+    { class: 'due-picker' },
+    el(
+      'button',
+      {
+        type: 'button',
+        class: `pill ${tone} pill--button`,
+        title: item.dueOverridden ? 'Change due date; clear to restore the source date' : 'Change due date',
+        'aria-label': `Change due date for ${item.title}, currently ${text}`,
+        onClick: (event: MouseEvent) => {
+          const picker = (event.currentTarget as HTMLButtonElement).nextElementSibling;
+          if (!(picker instanceof HTMLInputElement)) return;
+          try {
+            if (typeof picker.showPicker === 'function') picker.showPicker();
+            else throw new Error('Native date picker unavailable');
+          } catch {
+            picker.focus();
+            picker.click();
+          }
+        },
+      },
+      text,
+    ),
+    el('input', {
+      type: 'date',
+      class: 'due-picker__input',
+      value: selected,
+      tabIndex: -1,
+      'aria-label': `Choose due date for ${item.title}`,
+      onChange: (event: Event) => {
+        const due = (event.currentTarget as HTMLInputElement).value;
+        if (due) handlers.onAction(item.id, 'set-due', { due });
+        else if (item.dueOverridden) handlers.onAction(item.id, 'set-due', { due: null });
+      },
+    }),
   );
 }
 

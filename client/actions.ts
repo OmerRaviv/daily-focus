@@ -177,6 +177,7 @@ const PAST_TENSE: Record<ActionType, string> = {
   snooze: 'Snoozed',
   reopen: 'Restored',
   note: 'Note saved',
+  'set-due': 'Due date updated',
 };
 
 /** Last completed action, for the `u` shortcut. */
@@ -206,7 +207,7 @@ export function undoLast(): void {
 }
 
 /** The state as it will read once the server agrees, which it almost always does. */
-function optimistic(current: DashboardState, id: string, action: Exclude<ActionType, 'note'>, extra: ActionExtra): DashboardState {
+function optimistic(current: DashboardState, id: string, action: Exclude<ActionType, 'note' | 'set-due'>, extra: ActionExtra): DashboardState {
   const status: ItemStatus =
     action === 'reopen' ? 'open' : action === 'dismiss' ? 'dismissed' : action === 'done' ? 'done' : 'snoozed';
   const statusAt = new Date().toISOString();
@@ -248,17 +249,16 @@ async function applyAction(id: string, action: ActionType, extra: ActionExtra = 
     if (row && action === 'snooze' && item && (item.status === 'done' || item.status === 'dismissed')) {
       parkedFrom.set(id, item.status === 'done' ? 'done' : 'dismiss');
     }
-    if (action !== 'note') state.value = optimistic(current, id, action, extra);
+    if (action !== 'note' && action !== 'set-due') state.value = optimistic(current, id, action, extra);
   });
 
   try {
     state.value = await api.postAction({ id, action, ...extra });
     removePending(id);
 
-    // A note is append-only and can't be taken back, and "undoing" it with a
-    // reopen would rewrite the status of whatever else shares the id. So notes
-    // get no Undo and don't become the target of `u`.
-    if (action === 'note') {
+    // Notes and due-date edits do not change status, so a reopen would be the
+    // wrong undo for either of them.
+    if (action === 'note' || action === 'set-due') {
       showToast(PAST_TENSE[action]);
       return;
     }
